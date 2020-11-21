@@ -1,6 +1,6 @@
 # Cookiecutter Template for Selenium Python on AWS Lambda
 
-Use this cookiecutter template to generate a selenium python project
+Use this [cookiecutter](https://cookiecutter.readthedocs.io/en/latest/) template to generate a selenium python project
 that can be run on AWS Lambda.
 
 Why AWS Lambda? You get a selenium crawler that costs you money on runtime only.
