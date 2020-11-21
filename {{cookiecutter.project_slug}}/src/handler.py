@@ -26,3 +26,4 @@ def selenium_handler(event, context):
     url = ('http://example.com')
     driver.get(url)
     print(driver.title)
+    return driver.title

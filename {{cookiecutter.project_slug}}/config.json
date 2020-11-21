@@ -1,0 +1,10 @@
+{
+    "project_name": "{{ cookiecutter.project_slug }}",
+    "function_arn": "",
+    "role_arn": "",
+    "function_handler": "handler.selenium_handler",
+    "function_timeout": 900,
+    "function_memory_size": 1024,
+    "package_bucket": "",
+    "package_key": "{{ cookiecutter.project_slug }}/build.zip"
+}

@@ -1,3 +1,5 @@
 {
-    "project_name": "selenium-lambda"
+    "project_name": "Selenium Lambda",
+    "project_slug": "{{ cookiecutter.project_name.lower()|replace(' ', '-')|replace('_', '-')|replace('.', '-')|trim() }}",
+    "description": "Selenium project on AWS Lambda"
 }

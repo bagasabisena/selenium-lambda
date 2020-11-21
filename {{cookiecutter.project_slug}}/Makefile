@@ -1,3 +1,6 @@
+PROJECT_NAME := $(shell python -c "import json;print(json.load(open('config.json'))['project_name'])")
+FUNCTION_HANDLER := $(shell python -c "import json;print(json.load(open('config.json'))['function_handler'])")
+
 ## remove artifacts like build.zip and chrome driver
 clean:
 	rm -rf build build.zip
@@ -21,42 +24,54 @@ fetch-dependencies:
 
 ## build docker image for testing our selenium locally
 docker-build:
-	docker image build -t {{ cookiecutter.project_name }} .
+	docker image build -t {{ cookiecutter.project_slug }} .
 
 ## run selenium locally using docker
 docker-run:
-	docker container run --rm -it \
+	docker container run --rm \
 	-e "PYTHONPATH=/var/task/src:/var/task/lib" \
 	-e "PATH=/var/task/bin" \
 	-v $(shell pwd)/src:/var/task/src \
 	-v ${HOME}/.aws/credentials:/root/.aws/credentials:ro \
-	{{ cookiecutter.project_name }} src/handler.selenium_handler
+	$(PROJECT_NAME) src/$(FUNCTION_HANDLER)
+
+## create role if role_arn is empty on config.json
+lambda-role:
+	@echo create role
+	python scripts/create_role.py
 
 ## create lambda project if not exists
-lambda-create:
-	echo create
+lambda-create: lambda-role clean
+	@echo create lambda function
+	# only zip the code for dummy code
+	mkdir build
+	cp -r src build/.
+	cd build; zip -9qr build.zip .
+	cp build/build.zip .
+	python scripts/create_function.py
+	rm -r build/ && rm build.zip
 
 ## build zipped package and upload to s3
-lambda-build: clean
+lambda-build: check-bucket clean
 	mkdir build
 	cp -r src build/.
 	cp -r bin build/.
 	# cp -r lib build/.
 	pip install -r requirements.txt -t build/lib/.
-	sh slim.sh
+	sh scripts/slim.sh
 	cd build; zip -9qr build.zip .
 	cp build/build.zip .
+	python -u scripts/cp_s3.py
 	rm -rf build
-	aws s3 cp build.zip s3://gorengan-zappa/data-rdojk/build.zip
 	rm build.zip
 
-## deploy the deployed zip
-lambda-deploy:
-	aws lambda update-function-code \
-	--function-name arn:aws:lambda:ap-southeast-1:327356468888:function:data-rdojk \
-	--s3-bucket gorengan-zappa \
-	--s3-key data-rdojk/build.zip
+## deploy the lambda function
+lambda-deploy: lambda-create lambda-build
+	python scripts/update_function.py
 
+## check if bucket configuration is set
+check-bucket:
+	python scripts/check_bucket.py
 
 #################################################################################
 # Self Documenting Commands                                                     #
